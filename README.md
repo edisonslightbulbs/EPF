@@ -1,48 +1,41 @@
-#### Example use for this tiny knn lib based on [nanoflann](https://github.com/jlblancoc/nanoflann)
+#### Example use for this tiny searcher lib based on [nanoflann](https://github.com/jlblancoc/nanoflann)
 
 Massive thanks to [Jose](https://github.com/jlblancoc) for sharing this adaptation of [flann](https://github.com/mariusmuja/flann) 👏🍻🍻
 
-In this illustration, we find the 5th nearest neighbor of the first five points (i.e., given a set of 3D points). Typically, the Nth nearest neighbor of each point to every other point needs to be computed: an expensive operation even with nannoflann's impressive optimizations.
+#### Does my 3D point exist in a given `dense` set/cluster of 3D points?
+This tiny library uses `nanoflann's` `kd-tree to` help you answer that question ... in the fastest time possible!
+Here's an example of how to use it.
+```
+   int main()
+{
+    std::vector<Point> points = readPoints(); // <-- our dense set of points
 
-    int main()
-    {
-        int k = 5;                                // K value
-        std::vector<float> knnQuery;              // L2 distances to Kth neighbours
-        std::vector<Point> points = readPoints(); // get points
-        const int indexes = 5;                    // arbitrary val for illustration
+    std::vector<Point> queryPoints(6);
+    queryPoints[0] = Point(4.0, 5.0, 6.0);    // point does not exist in our set
+    queryPoints[1] = points[100];             // point does not exist in our set
+    queryPoints[2] = Point(6.0, 3.0, 6.0);    // point does not exist in our set
+    queryPoints[3] = Point(1.0, 10.0, 600.0); // point does not exist in our set
+    queryPoints[4] = points[1000];            // point does not exist in our set
+    queryPoints[5] = points[500];             // point does not exist in our set
 
-        for (int i = 0; i < indexes; i++) {
-            int indexOfQueryPoint = i;
-
-            std::vector<std::pair<Point, float>> nn
-                    = knn::pointFound(points, k, indexOfQueryPoint);
-
-            /* nanoflann uses squared L2 distances */
-            knnQuery.push_back( std::sqrt(nn[i].second));
-
-            std::cout << "#" << i << ",\t"
-                      << "dist: " << std::sqrt(nn[i].second) << ",\t"
-                      << "point: (" << nn[i].first.m_xyz[0] << ", "
-                      << nn[i].first.m_xyz[1] << ", " << nn[i].first.m_xyz[2]
-                      << ") " << std::endl;
+    for (auto& queryPoint : queryPoints) {
+        if (knn::pointFound(points, queryPoint)) {
+            std::cout << "-- point found" << std::endl;
+        } else {
+            std::cout << "-- point not found" << std::endl;
         }
-
-        /* sort the L2 distances and output them for plotting */
-        std::sort(knnQuery.begin(), knnQuery.end(), std::greater<>());
-        const std::string file = pwd() + "/knn.csv";
-        std::cout << file << std::endl;
-        write(knnQuery, file);
-        return 0;
     }
+    return 0;
+}
 
+```
 The `Point` Class used in this example given below:
-
-    struct Point {
-    std::array<float, 3> m_xyz {};
-    Point(float x, float y, float z)
-    : m_xyz({ x, y, z })
-    {
-    }
-    };
-
-The `readPoints` and `writePoints` functions are adaptable implementations and therefore left out.
+```
+struct Point {
+std::array<float, 3> m_xyz {};
+Point(float x, float y, float z)
+: m_xyz({ x, y, z })
+{
+}
+};
+```
