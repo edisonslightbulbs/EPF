@@ -8,26 +8,18 @@
 
 namespace knn {
 
-/** compute
+/** pointFound
  *    Wraps nanoflann's knn implementation into a tiny interface
  *
  *  @param points
  *    Set of 3D points (x, y, z).
  *
- *  @param k
- *    Value of K, i.e., number of neighbours
- *
- *  @param indexOfQueryPoint
- *    Index of the query point, i.e., index corresponding to first
- *    parameter
+ *  @param point
+ *    query point
  *
  *  @retval
- *     A list of point-distance pairs corresponding the nearest
- *     neighbours. The points and respective distances from a
- *     query point are sorted in ascending order.
+ *    true or false, i.e., found or not found
  * */
-
-bool compute(
-    std::vector<Point>& points, const int& k, const int& indexOfQueryPoint);
+bool pointFound(std::vector<Point>& points, const Point& point);
 }
 #endif /* KNN_H */
