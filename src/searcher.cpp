@@ -61,7 +61,7 @@ bool findPoint(const std::vector<Point>& points, const Point& point)
     return found;
 }
 
-bool knn::pointFound(std::vector<Point>& points, const Point& point)
+bool searcher::pointFound(std::vector<Point>& points, const Point& point)
 {
     bool found = findPoint(points, point);
     return found;

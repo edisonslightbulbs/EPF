@@ -6,7 +6,7 @@
 
 #include "point.h"
 
-namespace knn {
+namespace searcher {
 
 /** pointFound
  *    Wraps nanoflann's knn implementation into a tiny interface
