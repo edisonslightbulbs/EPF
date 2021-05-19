@@ -32,8 +32,7 @@ template <typename T> struct PointCloud {
 };
 
 template <typename T>
-void castToNanoflannPoint(
-    PointCloud<T>& point, const std::vector<Point>& points)
+void toNanoflannPoint(PointCloud<T>& point, const std::vector<Point>& points)
 {
     const size_t N = points.size();
     point.pts.resize(N);
@@ -50,7 +49,7 @@ typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
     3>
     kdTree;
 
-bool nanoflannKnn(
+bool kdTreeSearch(
     const std::vector<Point>& points, const Point& queryPoint, const int& k)
 {
     const size_t N = points.size();
@@ -59,7 +58,7 @@ bool nanoflannKnn(
     /** build kd-tree */
     kdTree index(3, cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
-    castToNanoflannPoint(cloud, points);
+    toNanoflannPoint(cloud, points);
 
     int chunk_size = 100;
 
@@ -93,5 +92,5 @@ bool nanoflannKnn(
 bool searcher::pointFound(std::vector<Point>& points, const Point& queryPoint)
 {
     const int k = 1;
-    return nanoflannKnn(points, queryPoint, k);
+    return kdTreeSearch(points, queryPoint, k);
 }
