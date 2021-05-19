@@ -1,11 +1,39 @@
 #include <cmath>
+#include <iostream>
 #include <nanoflann.hpp>
 
 #include "searcher.h"
-#include "utils.h"
+
+template <typename T> struct PointCloud {
+    struct Point {
+        T x, y, z;
+    };
+
+    std::vector<Point> pts;
+    [[nodiscard]] inline size_t kdtree_get_point_count() const
+    {
+        return pts.size();
+    }
+    [[nodiscard]] inline T kdtree_get_pt(
+        const size_t idx, const size_t dim) const
+    {
+        if (dim == 0)
+            return pts[idx].x;
+        else if (dim == 1)
+            return pts[idx].y;
+        else
+            return pts[idx].z;
+    }
+
+    template <class BBOX> bool kdtree_get_bbox(BBOX& /* bb */) const
+    {
+        return false;
+    }
+};
 
 template <typename T>
-void toNanoflannPoint(PointCloud<T>& point, const std::vector<Point>& points)
+void castToNanoflannPoint(
+    PointCloud<T>& point, const std::vector<Point>& points)
 {
     const size_t N = points.size();
     point.pts.resize(N);
@@ -16,53 +44,54 @@ void toNanoflannPoint(PointCloud<T>& point, const std::vector<Point>& points)
     }
 }
 
-bool findPoint(const std::vector<Point>& points, const Point& point)
+/** alias kd-tree index */
+typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
+    nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>, PointCloud<float>,
+    3>
+    kdTree;
+
+bool nanoflannKnn(
+    const std::vector<Point>& points, const Point& queryPoint, const int& k)
 {
-    const int K = 1; // <-- only find the 1st nearest neighbor
     const size_t N = points.size();
     PointCloud<float> cloud;
 
-    /** alias kd-tree index */
-    typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
-        nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
-        PointCloud<float>, 3>
-        my_kd_tree_t;
+    /** build kd-tree */
+    kdTree index(3, cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
-    my_kd_tree_t index(3, cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    castToNanoflannPoint(cloud, points);
 
-    /** adapt points to nanoflann::PointCloud<T> */
-    toNanoflannPoint(cloud, points);
+    int chunk_size = 100;
 
-    /** parse query point */
-    float queryPoint[3] = { point.m_xyz[0], point.m_xyz[1], point.m_xyz[2] };
-
-    /** do knn */
-    size_t chunk_size = 100;
     for (size_t i = 0; i < N; i = i + chunk_size) {
         size_t end = std::min(size_t(i + chunk_size), N - 1);
-
-        /** Inserts all points from [i, end] */
         index.addPoints(i, end);
     }
+
     size_t removePointIndex = N - 1;
     index.removePoint(removePointIndex);
-    size_t ret_index[K];
-    float out_dist_sqr[K];
-    nanoflann::KNNResultSet<float> resultSet(K);
-    resultSet.init(ret_index, out_dist_sqr);
-    index.findNeighbors(resultSet, queryPoint, nanoflann::SearchParams(10));
+    size_t kIndex[k];
+    float distsSquared[k];
+    nanoflann::KNNResultSet<float> resultSet(k);
+    resultSet.init(kIndex, distsSquared);
+
+    float point[3]
+        = { queryPoint.m_xyz[0], queryPoint.m_xyz[1], queryPoint.m_xyz[2] };
+
+    /**  search tree for point */
+    index.findNeighbors(resultSet, point, nanoflann::SearchParams(10));
 
     bool found = false;
     for (size_t i = 0; i < resultSet.size(); ++i) {
-        if (out_dist_sqr[i] == 0) {
+        if (distsSquared[i] == 0) {
             found = true;
         }
     }
     return found;
 }
 
-bool searcher::pointFound(std::vector<Point>& points, const Point& point)
+bool searcher::pointFound(std::vector<Point>& points, const Point& queryPoint)
 {
-    bool found = findPoint(points, point);
-    return found;
+    const int k = 1;
+    return nanoflannKnn(points, queryPoint, k);
 }
