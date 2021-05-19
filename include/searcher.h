@@ -1,25 +1,24 @@
-#ifndef KNN_H
-#define KNN_H
-
-#include <string>
-#include <vector>
+#ifndef SEARCHER_H
+#define SEARCHER_H
 
 #include "point.h"
+#include <vector>
 
 namespace searcher {
 
 /** pointFound
- *    Wraps nanoflann's knn implementation into a tiny interface
+ *    Computes the K nearest neighbours of a queryPoint.
  *
  *  @param points
  *    Set of 3D points (x, y, z).
  *
- *  @param point
+ *  @param queryPoint
  *    query point
  *
  *  @retval
- *    true or false, i.e., found or not found
+ *    true: if point found
+ *    false: if point not found
  * */
-bool pointFound(std::vector<Point>& points, const Point& point);
+bool pointFound(std::vector<Point>& points, const Point& queryPoint);
 }
-#endif /* KNN_H */
+#endif /* SEARCHER_H */
