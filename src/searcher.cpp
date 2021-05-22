@@ -74,8 +74,8 @@ bool kdTreeSearch(
     nanoflann::KNNResultSet<float> resultSet(k);
     resultSet.init(kIndex, distsSquared);
 
-    float point[3]
-        = { queryPoint.m_xyz[0], queryPoint.m_xyz[1], queryPoint.m_xyz[2] };
+    float point[3] = { (float)queryPoint.m_xyz[0], (float)queryPoint.m_xyz[1],
+        (float)queryPoint.m_xyz[2] };
 
     /**  search tree for point */
     index.findNeighbors(resultSet, point, nanoflann::SearchParams(10));
